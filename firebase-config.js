@@ -14,4 +14,4 @@ const FIREBASE_CONFIG = {
 };
 
 // Family PIN code — change this to your own 4-digit code!
-const FAMILY_PIN = "1234";
+const FAMILY_PIN = "1224";
