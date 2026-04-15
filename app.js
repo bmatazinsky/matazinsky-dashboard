@@ -115,7 +115,6 @@ function setupDynamicListener(fbKey) {
     // Re-render relevant views
     if (authenticated) {
       if (fbKey.indexOf('mz2_meals') === 0) renderMeals();
-      if (fbKey.indexOf('mz2_budget') === 0) renderBudget();
     }
   });
 }
@@ -186,10 +185,11 @@ if (authenticated) {
   initApp();
 }
 
+var KEYS={grocery:"mz2_grocery",todo:"mz2_todo",events:"mz2_events",notes:"mz2_notes",pets:"mz2_pets"};
 var TODO_CATS=["Outdoor","House","Luka","Other"];
 var calYear=2026,calMonth=3,selPet=null;
 var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-var NAV_LABELS = {todo:"To-Do",calendar:"Calendar",grocery:"Groceries",meals:"Meal Planning",recipes:"Recipes",home:"Home Maintenance",budget:"Budget",luka:"Luka",pets:"Pet Meds",notes:"Notes"};
+var NAV_LABELS = {todo:"To-Do",calendar:"Calendar",grocery:"Groceries",meals:"Meal Planning",recipes:"Recipes",home:"Home Maintenance",luka:"Luka",pets:"Pet Meds",notes:"Notes"};
 
 function toggleNavMenu(){
   var btn=document.getElementById('nav-menu-btn');
@@ -222,7 +222,7 @@ function switchTab(n){
   // Show panel
   document.querySelectorAll(".panel").forEach(function(p){p.classList.remove("active");});
   document.getElementById("panel-"+n).classList.add("active");
-  if(n==="calendar")renderCal();if(n==="pets")renderPets();if(n==="overview")renderOverview();if(n==="recipes")renderRecipes();if(n==="meals")renderMeals();if(n==="home")renderHome();if(n==="budget")renderBudget();
+  if(n==="calendar")renderCal();if(n==="pets")renderPets();if(n==="overview")renderOverview();if(n==="recipes")renderRecipes();if(n==="meals")renderMeals();if(n==="home")renderHome();
   var conf=document.getElementById('recipe-added-confirm');if(conf&&n!=="recipes")conf.style.display='none';
 }
 function tagHTML(w){if(w==="b")return'<span class="tag tag-b">Brent</span>';if(w==="l")return'<span class="tag tag-l">Lauren</span>';if(w==="s")return'<span class="tag tag-s">Both</span>';return"";}
@@ -708,28 +708,6 @@ function renderOverview(){
   document.getElementById("ov-pets-card").innerHTML='<div class="ov-sec-hdr">Pet meds due soon</div>'+medHTML;
   var notesHTML=D.notes.length?D.notes.map(function(n){return'<div class="ov-note">'+n.text+'</div>';}).join(""):'<div class="ov-empty">No notes</div>';
   document.getElementById("ov-notes-card").innerHTML='<div class="ov-sec-hdr">Notes &amp; reminders</div>'+notesHTML;
-  // Budget summary on overview
-  var budgetOvEl = document.getElementById("ov-budget-card");
-  if (budgetOvEl) {
-    var budgetEntries = budgetStore(0);
-    var budgetTotal = 0;
-    budgetEntries.forEach(function(e){ budgetTotal += e.amount; });
-    var budgetHTML = '<div class="ov-sec-hdr">Budget this month</div>';
-    if (budgetEntries.length) {
-      budgetHTML += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0">';
-      budgetHTML += '<span style="font-size:16px;font-weight:700;color:#2A2010">$' + budgetTotal.toFixed(2) + '</span>';
-      budgetHTML += '<span style="font-size:11px;color:#8B7D50">' + budgetEntries.length + ' expense' + (budgetEntries.length!==1?'s':'') + '</span></div>';
-      var budCats = {};
-      budgetEntries.forEach(function(e){ budCats[e.cat] = (budCats[e.cat]||0) + e.amount; });
-      var topCats = Object.keys(budCats).sort(function(a,b){return budCats[b]-budCats[a];}).slice(0,3);
-      topCats.forEach(function(c) {
-        budgetHTML += '<div style="font-size:11px;color:#4A3D1A;padding:2px 0">'+c+': <span style="color:#8B7D50">$'+budCats[c].toFixed(2)+'</span></div>';
-      });
-    } else {
-      budgetHTML += '<div class="ov-empty">No expenses this month</div>';
-    }
-    budgetOvEl.innerHTML = budgetHTML;
-  }
 }
 
 
@@ -1384,140 +1362,3 @@ document.addEventListener('click', function(e) {
 
 
 
-
-// ── BUDGET ────────────────────────────────────────────────────────────────────
-var budgetMonthOffset = 0;
-var BUDGET_CATS = ['Groceries','Dining Out','Kids','Utilities','Home','Auto','Health','Entertainment','Shopping','Pets','Other'];
-var BUDGET_CAT_COLORS = {
-  'Groceries':'#4A3D1A','Dining Out':'#A0845A','Kids':'#5C6020','Utilities':'#6B5C30',
-  'Home':'#8B7D50','Auto':'#7A6040','Health':'#D32F2F','Entertainment':'#1976D2',
-  'Shopping':'#E91E63','Pets':'#388E3C','Other':'#757575'
-};
-
-function budgetKey(offset) {
-  var d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + (offset || 0));
-  return 'mz2_budget_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-}
-function budgetMonthLabel(offset) {
-  var d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + (offset || 0));
-  return MONTHS[d.getMonth()] + ' ' + d.getFullYear();
-}
-function budgetStore(offset) { return ls(budgetKey(offset)) || []; }
-function prevBudgetMonth() { budgetMonthOffset--; renderBudget(); }
-function nextBudgetMonth() { budgetMonthOffset++; renderBudget(); }
-function openBudgetModal() {
-  document.getElementById('bud-desc').value='';
-  document.getElementById('bud-amount').value='';
-  document.getElementById('bud-cat').value='Groceries';
-  document.getElementById('bud-who').value='b';
-  document.getElementById('bud-notes').value='';
-  var today = new Date();
-  document.getElementById('bud-date').value = today.toISOString().slice(0,10);
-  document.getElementById('budget-modal').classList.add('open');
-}
-function closeBudgetModal() { document.getElementById('budget-modal').classList.remove('open'); }
-function saveBudgetEntry() {
-  var desc = document.getElementById('bud-desc').value.trim();
-  var amount = parseFloat(document.getElementById('bud-amount').value);
-  if (!desc || isNaN(amount) || amount <= 0) return;
-  var date = document.getElementById('bud-date').value;
-  if (!date) return;
-  var entryDate = new Date(date + 'T12:00:00');
-  var key = 'mz2_budget_' + entryDate.getFullYear() + '-' + String(entryDate.getMonth()+1).padStart(2,'0');
-  var entries = ls(key) || [];
-  entries.push({
-    id: Date.now(),
-    desc: desc,
-    amount: amount,
-    cat: document.getElementById('bud-cat').value,
-    who: document.getElementById('bud-who').value,
-    date: date,
-    notes: document.getElementById('bud-notes').value.trim()
-  });
-  ss(key, entries);
-  closeBudgetModal();
-  renderBudget();
-}
-function delBudgetEntry(idx) {
-  var entries = budgetStore(budgetMonthOffset);
-  entries.splice(idx, 1);
-  ss(budgetKey(budgetMonthOffset), entries);
-  renderBudget();
-}
-function renderBudget() {
-  var labelEl = document.getElementById('budget-month-label');
-  if (!labelEl) return;
-  labelEl.textContent = budgetMonthLabel(budgetMonthOffset);
-  var entries = budgetStore(budgetMonthOffset);
-  var total = 0, byCat = {}, byWho = {b:0, l:0, s:0};
-  entries.forEach(function(e) {
-    total += e.amount;
-    byCat[e.cat] = (byCat[e.cat] || 0) + e.amount;
-    byWho[e.who] = (byWho[e.who] || 0) + e.amount;
-  });
-  var summaryHTML = '';
-  if (!entries.length) {
-    summaryHTML = '<div style="font-size:12px;color:#C8B88A;padding:8px 0;font-style:italic">No expenses this month</div>';
-  } else {
-    summaryHTML += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 8px;border-bottom:1px solid #EDE5CC">';
-    summaryHTML += '<span style="font-size:18px;font-weight:700;color:#2A2010">$' + total.toFixed(2) + '</span>';
-    summaryHTML += '<span style="font-size:11px;color:#8B7D50">' + entries.length + ' expense' + (entries.length!==1?'s':'') + '</span></div>';
-    summaryHTML += '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #EDE5CC">';
-    var whoLabels = {b:'Brent', l:'Lauren', s:'Both'};
-    var whoColors = {b:'#4A5220', l:'#6B5C30', s:'#8B7D50'};
-    ['b','l','s'].forEach(function(w) {
-      if (byWho[w] > 0) {
-        summaryHTML += '<div style="display:flex;align-items:center;gap:5px">';
-        summaryHTML += '<span style="width:8px;height:8px;border-radius:50%;background:'+whoColors[w]+';flex-shrink:0"></span>';
-        summaryHTML += '<span style="font-size:11px;color:#4A3D1A;font-weight:500">' + whoLabels[w] + '</span>';
-        summaryHTML += '<span style="font-size:11px;color:#8B7D50">$' + byWho[w].toFixed(2) + '</span></div>';
-      }
-    });
-    summaryHTML += '</div>';
-    var maxCat = 0;
-    BUDGET_CATS.forEach(function(c) { if ((byCat[c]||0) > maxCat) maxCat = byCat[c]; });
-    summaryHTML += '<div style="padding:8px 0">';
-    BUDGET_CATS.forEach(function(c) {
-      var amt = byCat[c] || 0;
-      if (amt <= 0) return;
-      var pct = maxCat > 0 ? Math.round((amt / maxCat) * 100) : 0;
-      var color = BUDGET_CAT_COLORS[c] || '#8B7D50';
-      summaryHTML += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">';
-      summaryHTML += '<span style="font-size:11px;color:#4A3D1A;width:90px;flex-shrink:0;text-align:right">' + c + '</span>';
-      summaryHTML += '<div style="flex:1;height:14px;background:#EDE5CC;border-radius:7px;overflow:hidden">';
-      summaryHTML += '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:7px;min-width:4px"></div></div>';
-      summaryHTML += '<span style="font-size:11px;color:#8B7D50;width:65px;flex-shrink:0">$' + amt.toFixed(2) + '</span></div>';
-    });
-    summaryHTML += '</div>';
-  }
-  document.getElementById('budget-summary').innerHTML = summaryHTML;
-  var listHTML = '';
-  if (!entries.length) {
-    listHTML = '<div style="font-size:12px;color:#C8B88A;padding:8px 0">No expenses yet. Tap "+ Add expense" to get started.</div>';
-  } else {
-    var sorted = entries.map(function(e,i){return{e:e,i:i};}).sort(function(a,b){return b.e.date.localeCompare(a.e.date);});
-    sorted.forEach(function(obj) {
-      var e = obj.e, idx = obj.i;
-      var d = new Date(e.date + 'T12:00:00');
-      var dateLbl = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      var color = BUDGET_CAT_COLORS[e.cat] || '#8B7D50';
-      listHTML += '<div class="item-row"><div class="item-main">';
-      listHTML += '<span style="width:6px;height:24px;border-radius:3px;background:'+color+';flex-shrink:0"></span>';
-      listHTML += '<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
-      listHTML += '<span style="font-size:13px;font-weight:500;color:#2A2010">' + e.desc + '</span>';
-      listHTML += '<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:#EDE5CC;color:#6B5C30">' + e.cat + '</span>';
-      listHTML += tagHTML(e.who) + '</div>';
-      listHTML += '<div style="font-size:11px;color:#8B7D50;margin-top:2px">' + dateLbl;
-      if (e.notes) listHTML += ' \u00b7 ' + e.notes;
-      listHTML += '</div></div>';
-      listHTML += '<span style="font-size:14px;font-weight:600;color:#2A2010;flex-shrink:0;white-space:nowrap">$' + e.amount.toFixed(2) + '</span>';
-      listHTML += '<button class="del-btn" onclick="delBudgetEntry(' + idx + ')">&#215;</button>';
-      listHTML += '</div></div>';
-    });
-  }
-  document.getElementById('budget-list').innerHTML = listHTML;
-}
