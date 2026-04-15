@@ -49,32 +49,44 @@ var D = {
   pets: []
 };
 
-// Helper: read from Firebase (returns cached value synchronously)
-function ls(k) {
-  // For dynamic keys (meals, budget, home, etc), read from cache
-  if (k === 'mz2_grocery') return D.grocery;
-  if (k === 'mz2_todo') return D.todo;
-  if (k === 'mz2_events') return D.events;
-  if (k === 'mz2_notes') return D.notes;
-  if (k === 'mz2_pets') return D.pets;
-  // Dynamic keys stored in Firebase under their key name
-  var cached = window._fbCache && window._fbCache[k];
-  return cached !== undefined ? cached : null;
+// Helper: Firebase converts arrays to objects {0:..., 1:...} — fix that
+function fbToArray(val) {
+  if (val === null || val === undefined) return null;
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'object') {
+    var keys = Object.keys(val);
+    var isNumeric = keys.length > 0 && keys.every(function(k) { return !isNaN(k); });
+    if (isNumeric) {
+      var arr = [];
+      keys.forEach(function(k) { arr[parseInt(k)] = val[k]; });
+      return arr.filter(function(x) { return x !== undefined; });
+    }
+  }
+  return val;
 }
 
-// Helper: write to Firebase (replaces localStorage)
-function ss(k, v) {
-  // Update local cache immediately for responsive UI
-  if (k === 'mz2_grocery') D.grocery = v;
-  else if (k === 'mz2_todo') D.todo = v;
-  else if (k === 'mz2_events') D.events = v;
-  else if (k === 'mz2_notes') D.notes = v;
-  else if (k === 'mz2_pets') D.pets = v;
-  else {
-    if (!window._fbCache) window._fbCache = {};
-    window._fbCache[k] = v;
+// Helper: read from cache (replaces localStorage.getItem)
+function ls(k) {
+  if (k === 'mz2_grocery') return D.grocery.length ? D.grocery : null;
+  if (k === 'mz2_todo') return D.todo.length ? D.todo : null;
+  if (k === 'mz2_events') return D.events.length ? D.events : null;
+  if (k === 'mz2_notes') return D.notes.length ? D.notes : null;
+  if (k === 'mz2_pets') return D.pets.length ? D.pets : null;
+  if (window._fbCache && window._fbCache.hasOwnProperty(k)) {
+    var val = window._fbCache[k];
+    return val !== null && val !== undefined ? val : null;
   }
-  // Write to Firebase
+  return null;
+}
+
+// Helper: write to Firebase (replaces localStorage.setItem)
+function ss(k, v) {
+  if (k === 'mz2_grocery') D.grocery = v || [];
+  else if (k === 'mz2_todo') D.todo = v || [];
+  else if (k === 'mz2_events') D.events = v || [];
+  else if (k === 'mz2_notes') D.notes = v || [];
+  else if (k === 'mz2_pets') D.pets = v || [];
+  else { window._fbCache[k] = v; }
   var fbKey = k.replace(/[.#$/\[\]]/g, '_');
   dbRef.child(fbKey).set(v);
 }
@@ -87,7 +99,7 @@ window._fbCache = {};
 function setupListener(fbKey, localKey, setter) {
   _totalListeners++;
   dbRef.child(fbKey).on('value', function(snap) {
-    var val = snap.val();
+    var val = fbToArray(snap.val());
     setter(val);
     _listenersReady++;
     if (_listenersReady >= _totalListeners && authenticated) {
@@ -98,8 +110,7 @@ function setupListener(fbKey, localKey, setter) {
 
 function setupDynamicListener(fbKey) {
   dbRef.child(fbKey).on('value', function(snap) {
-    var val = snap.val();
-    if (!window._fbCache) window._fbCache = {};
+    var val = fbToArray(snap.val());
     window._fbCache[fbKey] = val;
     // Re-render relevant views
     if (authenticated) {
