@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Matazinsky Family Dashboard</title>
 <link rel="stylesheet" href="style.css" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
@@ -58,9 +58,6 @@
         <button class="nav-item" onclick="switchTab('recipes')">Recipes</button>
         <button class="nav-item" onclick="switchTab('home')">Home Maintenance</button>
         <div class="nav-divider"></div>
-        <div class="nav-group-label">Money</div>
-        <button class="nav-item" onclick="switchTab('budget')">Budget</button>
-        <div class="nav-divider"></div>
         <div class="nav-group-label">Kids</div>
         <button class="nav-item" onclick="switchTab('pets')">Pet Meds</button>
         <div class="nav-divider"></div>
@@ -76,7 +73,6 @@
       <div class="ov-grid" id="ov-top"></div>
       <div class="card ov-card-tan" id="ov-pets-card"></div>
       <div class="card ov-card-warm" id="ov-notes-card"></div>
-      <div class="card ov-card-brown" id="ov-budget-card"></div>
     </div>
 
     <!-- GROCERIES -->
@@ -219,28 +215,6 @@
           </div>
         </div>
         <div id="meal-days"></div>
-      </div>
-    </div>
-
-    <!-- BUDGET -->
-    <div class="panel" id="panel-budget">
-      <div class="card card-top-brown">
-        <div class="card-hdr">
-          <div class="card-title">Monthly budget</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <button class="btn" style="font-size:11px;height:28px" onclick="prevBudgetMonth()">&#8249;</button>
-            <span style="font-size:11px;color:#8B7D50;font-weight:500" id="budget-month-label"></span>
-            <button class="btn" style="font-size:11px;height:28px" onclick="nextBudgetMonth()">&#8250;</button>
-          </div>
-        </div>
-        <div id="budget-summary"></div>
-      </div>
-      <div class="card card-top-tan">
-        <div class="card-hdr">
-          <div class="card-title">Expenses</div>
-          <button class="btn btn-brown" onclick="openBudgetModal()">+ Add expense</button>
-        </div>
-        <div id="budget-list"></div>
       </div>
     </div>
 
@@ -401,40 +375,6 @@
     <div style="font-size:10px;font-weight:600;color:#8B7D50;text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px">Notes</div>
     <textarea id="hm-notes" style="height:56px;padding:8px 10px;resize:none;margin-bottom:0" placeholder="e.g. filter size 16x25x1, contractor name..."></textarea>
     <div class="modal-btns" style="margin-top:10px"><button onclick="closeHomeModal()">Cancel</button><button class="p" onclick="saveHomeTask()">Save</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="budget-modal">
-  <div class="modal">
-    <h3>Add expense</h3>
-    <input type="text" id="bud-desc" placeholder="Description (e.g. Target run, Electric bill)..." />
-    <div style="font-size:10px;font-weight:600;color:#8B7D50;text-transform:uppercase;letter-spacing:0.04em;margin:4px 0 4px">Amount</div>
-    <input type="number" id="bud-amount" placeholder="0.00" step="0.01" min="0" style="margin-bottom:0" />
-    <div style="font-size:10px;font-weight:600;color:#8B7D50;text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px">Category</div>
-    <select id="bud-cat" style="margin-bottom:0">
-      <option value="Groceries">Groceries</option>
-      <option value="Dining Out">Dining Out</option>
-      <option value="Kids">Kids</option>
-      <option value="Utilities">Utilities</option>
-      <option value="Home">Home</option>
-      <option value="Auto">Auto</option>
-      <option value="Health">Health</option>
-      <option value="Entertainment">Entertainment</option>
-      <option value="Shopping">Shopping</option>
-      <option value="Pets">Pets</option>
-      <option value="Other">Other</option>
-    </select>
-    <div style="font-size:10px;font-weight:600;color:#8B7D50;text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px">Who</div>
-    <select id="bud-who" style="margin-bottom:0">
-      <option value="b">Brent</option>
-      <option value="l">Lauren</option>
-      <option value="s">Both</option>
-    </select>
-    <div style="font-size:10px;font-weight:600;color:#8B7D50;text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px">Date</div>
-    <input type="date" id="bud-date" style="margin-bottom:0" />
-    <div style="font-size:10px;font-weight:600;color:#8B7D50;text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px">Notes</div>
-    <textarea id="bud-notes" style="height:48px;padding:8px 10px;resize:none;margin-bottom:0" placeholder="Optional notes..."></textarea>
-    <div class="modal-btns" style="margin-top:10px"><button onclick="closeBudgetModal()">Cancel</button><button class="p" onclick="saveBudgetEntry()">Save</button></div>
   </div>
 </div>
 
